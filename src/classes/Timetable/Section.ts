@@ -1,4 +1,5 @@
-import type { Moment } from "moment";
+import type { Moment } from "moment-timezone";
+import { TimeslotType } from "../../enums/calendar.js";
 
 export class Section {
     public readonly startTime: Moment;
@@ -7,10 +8,13 @@ export class Section {
 
     public title?: string;
 
-    public constructor(startTime: Moment, endTime: Moment, title?: string) {
+    public readonly timeslotType: TimeslotType;
+
+    public constructor(timeslotType: TimeslotType, startTime: Moment, endTime: Moment, title?: string) {
         this.startTime = startTime;
         this.endTime = endTime;
         this.title = title;
+        this.timeslotType = timeslotType;
     }
 }
 
@@ -22,7 +26,7 @@ export class LessonSection extends Section {
     public constructor(startTime: Moment, endTime: Moment, data: {
         classes: Array<{ subject: string; venue: string; }>
     }) {
-        super(startTime, endTime);
+        super(TimeslotType.Lesson, startTime, endTime);
         this.classes = data.classes;
 
         /* title format: "Subject1/SubjectB Rm101/Rm102" */
@@ -35,18 +39,18 @@ export class LessonSection extends Section {
 
 export class MorningAssemblySection extends Section {
     public constructor(startTime: Moment, endTime: Moment, _data: any) {
-        super(startTime, endTime, "Morning Assembly");
+        super(TimeslotType.MorningAssembly, startTime, endTime, "早會");
     }
 }
 
 export class RecessSection extends Section {
     public constructor(startTime: Moment, endTime: Moment, _data: any) {
-        super(startTime, endTime, "Recess");
+        super(TimeslotType.Recess, startTime, endTime, "小息");
     }
 }
 
 export class LunchSection extends Section {
     public constructor(startTime: Moment, endTime: Moment, _data: any) {
-        super(startTime, endTime, "Lunch");
+        super(TimeslotType.Lunch, startTime, endTime, "午膳");
     }
 }

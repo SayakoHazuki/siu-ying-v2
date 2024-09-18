@@ -1,4 +1,4 @@
-import type { Moment } from "moment";
+import type { Moment } from "moment-timezone";
 import { TimeslotType } from "../../enums/calendar.js";
 import { LessonSection, LunchSection, MorningAssemblySection, RecessSection } from "./Section.js";
 

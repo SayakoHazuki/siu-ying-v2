@@ -10,3 +10,4 @@
     
 //     logger.info(cal2.getDayOfCycle("13/09/2024"));
 // })();
+void 0;

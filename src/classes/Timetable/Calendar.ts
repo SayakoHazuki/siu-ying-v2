@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { Moment } from "moment";
+import type { Moment } from "moment-timezone";
 import { CONFIG } from "../../config.js";
 import { CONSTS } from "../../consts.js";
 import { DayOfCycle, OtherDay } from "../../enums/calendar.js";

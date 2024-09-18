@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from 'discord.js';
-import moment from 'moment';
+import moment from "moment-timezone";
 import logger from '../classes/Logger/index.js';
 import { TimetableQuery } from '../classes/Timetable/TimetableQuery.js';
 import type { Command } from './index.js';
@@ -25,7 +25,7 @@ export default {
 	},
 	async execute(interaction) {
 		logger.info(`Timetable command executed by ${interaction.user.tag}, class: ${interaction.options.getString('class')}, date: ${interaction.options.getString('date')}`);
-		const query = new TimetableQuery(interaction.options.getString('class'), moment(interaction.options.getString('date')));
+		const query = new TimetableQuery(interaction, interaction.options.getString('class'), moment.tz(interaction.options.getString('date'), "Asia/Hong_Kong"));
 		await interaction.deferReply();
 		const result = await query.execute();
 		await interaction.editReply({
