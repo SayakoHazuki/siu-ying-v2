@@ -46,7 +46,7 @@ export class Timeslot<Type extends TimeslotType> {
     }
 
     public toSection(
-        data: Type extends TimeslotType.Lesson ? { classes: Array<{ subject: string; venue: string; }> } : Record<string, never>
+        data: Type extends TimeslotType.Lesson ? { classes: Array<{ subject: string; venue: string; }>; form: string } : Record<string, never>
     ) {
         const sectionConstructor = {
             [TimeslotType.Lesson]: LessonSection,

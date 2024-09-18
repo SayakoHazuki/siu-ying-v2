@@ -16,6 +16,28 @@ export function registerEvents(commands: Map<string, Command>, events: Event[], 
 
 				await command.execute(interaction);
 			}
+
+			if (interaction.isButton()) {
+				const [commandId, customId, ...args] = interaction.customId.split(':');
+				const command = commands.get(commandId);
+
+				if (!command) {
+					throw new Error(`Command '${customId}' not found.`);
+				}
+
+				await command.handleButton?.(interaction, customId, ...args);
+			}
+			
+			if (interaction.isStringSelectMenu()) {
+				const [commandId, customId, ...args] = interaction.customId.split(':');
+				const command = commands.get(commandId);
+
+				if (!command) {
+					throw new Error(`Command '${customId}' not found.`);
+				}
+
+				await command.handleSelectMenu?.(interaction, customId, ...args);
+			}
 		},
 	};
 

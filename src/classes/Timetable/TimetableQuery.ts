@@ -1,5 +1,6 @@
-import type { CommandInteraction } from "discord.js";
+import type { ButtonInteraction, CommandInteraction, StringSelectMenuInteraction } from "discord.js";
 import type { Moment } from "moment-timezone";
+import { CONFIG } from "../../config.js";
 import { DayOfCycle, DayType, OtherDay, TimeslotType } from "../../enums/calendar.js";
 import { SiuYingEmbed } from "../../util/embed.js";
 import { Calendar } from "./Calendar.js";
@@ -47,7 +48,7 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
         const { data } = this as TimetableQueryResult<"Success">;
         switch (data.type) {
             case DayType.HOLIDAY:
-                return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Green").setTitle("Holiday").setDescription("No school today! Enjoy your holiday.");
+                return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Green").setTitle(`${this.query.query.date.format("YYYY-MM-DD")} - Holiday`).setDescription("No school today! Enjoy your holiday.");
             case DayType.SCHOOL_DAY: {
                 const divider = "────────────────────";
                 const dividerWithText = (text: string) => {
@@ -67,7 +68,7 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
 
                 return new SiuYingEmbed({ user: this.query.interaction.user })
                     .setColor("Blue")
-                    .setTitle(`Timetable for ${this.query.query.cls}`)
+                    .setTitle(`🗓️ Timetable for ${this.query.query.cls}`)
                     .setDescription([dateBlock, sectionsBlock].join("\n"))
                     .setThumbnail("https://i.imgur.com/MteV7Gv.png")
             }
@@ -79,14 +80,14 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
 }
 
 export class TimetableQuery {
-    public readonly interaction: CommandInteraction;
+    public readonly interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction;
 
     public readonly query: {
         cls: string;
         date: Moment;
     };
 
-    public constructor(interaction: CommandInteraction, cls: string, date: Moment) {
+    public constructor(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction, cls: string, date: Moment) {
         if (!cls || !date) throw new Error("Invalid query parameters");
         this.interaction = interaction;
         this.query = { cls, date };
@@ -120,10 +121,10 @@ export class TimetableQuery {
         const sections = dayTimeslots.map((timeslot) => {
             if (timeslot.type === TimeslotType.Lesson) {
                 const schedule = daySchedules[timeslot.indexOfType];
-                const subjects = schedule.subject.split("/");
-                const venues = schedule.venue.split("/");
+                const subjects = schedule.subject.split(CONFIG.API.FORMATS.TIMETABLE_SUBJECT_SPLITTER);
+                const venues = schedule.venue.split(CONFIG.API.FORMATS.TIMETABLE_SUBJECT_SPLITTER);
                 const classes = subjects.map((subject, idx) => ({ subject, venue: venues[idx] }));
-                return (timeslot as Timeslot<TimeslotType.Lesson>).toSection({ classes });
+                return (timeslot as Timeslot<TimeslotType.Lesson>).toSection({ classes, form: `S${this.query.cls.charAt(0)}` });
             } else {
                 return (timeslot as Timeslot<Exclude<TimeslotType, TimeslotType.Lesson>>).toSection({});
             }
