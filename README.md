@@ -36,6 +36,7 @@ Please store your own secrets by creating a new file called `.env` in the root d
 ```env
 DISCORD_TOKEN=A1B2C3D4E5XXXXXXXXXXXX.XXXXXX.XXXX-XXXXXXXXXXX
 APPLICATION_ID=12345678999999999
+SUPABASE_SERVICE_KEY=XXXXXX-YOUR-SERVICE-ROLE-KEY-XXXXXXXXXX
 ```
 **Please do not include your secrets when making commits**
 

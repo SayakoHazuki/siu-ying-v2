@@ -1,4 +1,4 @@
-import type { RESTPostAPIApplicationCommandsJSONBody, CommandInteraction, ButtonInteraction, StringSelectMenuInteraction } from 'discord.js';
+import type { RESTPostAPIApplicationCommandsJSONBody, CommandInteraction, ButtonInteraction, StringSelectMenuInteraction, ModalSubmitInteraction, ModalSubmitFields } from 'discord.js';
 import { z } from 'zod';
 import type { StructurePredicate } from '../util/loaders.js';
 
@@ -24,6 +24,14 @@ export type Command = {
 	 * @param args - The arguments of the button
 	 */
 	handleButton?(interaction: ButtonInteraction, customId: string, ...args: string[]): Promise<void> | void;
+	/**
+	 * The function to handle Modal submissions
+	 * 
+	 * @param interaction - The interaction of the command
+	 * @param customId - The custom ID of the modal
+	 * @param fields - The fields of the modal
+	 */
+	handleModal?(interaction: ModalSubmitInteraction, customId: string, fields: ModalSubmitFields): Promise<void> | void;
 	/**
 	 * The function to handle select menu interactions
 	 * 

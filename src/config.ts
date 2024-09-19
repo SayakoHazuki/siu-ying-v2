@@ -10,6 +10,9 @@ export const CONFIG = {
             TIMETABLE_SUBJECT_SPLITTER: ' / ', // e.g. "CHIN / ENG" (the " / " is the splitter)
         }
     },
+    DATABASE: {
+        SUPABASE_URL: 'https://kqspycestkoqcatqhppl.supabase.co',
+    },
     TIMETABLE: {
         CALENDAR_REL_SAVE_PATH: '../../../data/apiCalendar.json', // relative to classes/Timetable/Calendar.ts
         SCHEDULES_REL_SAVE_PATH: '../../../data/apiSchedules.json', // relative to classes/Timetable/Schedules

@@ -2,10 +2,12 @@ import type { ButtonInteraction, ChatInputCommandInteraction, StringSelectMenuIn
 import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
 import type { Moment } from "moment-timezone";
 import moment from "moment-timezone";
+import { User } from '../classes/Database/User.js';
 import logger from '../classes/Logger/index.js';
 import { TimetableQuery } from '../classes/Timetable/TimetableQuery.js';
 import { CONFIG } from '../config.js';
 import { SiuYingEmbed } from '../util/embed.js';
+import SettingsCommand from './settings.js';
 import type { Command } from './index.js';
 
 export const getTimetableActions = (cls: string, date: Moment) => [
@@ -40,9 +42,9 @@ export default {
 		options: [
 			{
 				name: 'class',
-				description: 'Input the class you want to check (e.g. 1A)',
+				description: 'Input the class you want to check (e.g. 1A), leave blank for preset class settings',
 				type: ApplicationCommandOptionType.String,
-				required: true,
+				required: false,
 			},
 			{
 				name: 'date',
@@ -59,7 +61,12 @@ export default {
 		let inputDate = interaction.options.getString('date');
 
 		if (!inputCls) {
-			inputCls = "1A"
+			const user = await User.fetch(interaction.user.id);
+			if (user?.settings.cls) {
+				inputCls = user.settings.cls;
+			} else {
+				return void await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Please input a class").setDescription("You have not set a default class for timetable commands yet. Please either set it using `/settings` or include a class in the command.")] });
+			}
 		}
 
 		if (!inputDate) {
@@ -113,7 +120,8 @@ export default {
 			}
 
 			case "settings": {
-				return void await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Settings").setDescription("Settings are not available yet.")] });
+				await SettingsCommand.execute(interaction);
+				return;
 			}
 
 			default:
