@@ -12,9 +12,9 @@ import type { Command } from './index.js';
 
 export const getTimetableActions = (cls: string, date: Moment) => [
 	new ActionRowBuilder<ButtonBuilder>().addComponents(
-		new ButtonBuilder().setCustomId(`timetable:previous:${cls}:${date.format("YYYY-MM-DD")}`).setLabel("<<").setStyle(ButtonStyle.Primary),
-		new ButtonBuilder().setCustomId(`timetable:void`).setLabel(date.format("DD/MM")).setStyle(ButtonStyle.Secondary).setDisabled(true),
-		new ButtonBuilder().setCustomId(`timetable:next:${cls}:${date.format("YYYY-MM-DD")}`).setLabel(">>").setStyle(ButtonStyle.Primary),
+		new ButtonBuilder().setCustomId(`timetable:previous:${cls}:${date.format("YYYY-MM-DD")}`).setEmoji("1013803101129543690").setStyle(ButtonStyle.Primary),
+		new ButtonBuilder().setCustomId(`timetable:void`).setLabel(date.format("DD/MM")).setStyle(ButtonStyle.Primary).setDisabled(true),
+		new ButtonBuilder().setCustomId(`timetable:next:${cls}:${date.format("YYYY-MM-DD")}`).setEmoji("1013802785910833234").setStyle(ButtonStyle.Primary),
 		new ButtonBuilder().setCustomId(`timetable:today:${cls}`).setLabel("跳至今日").setStyle(ButtonStyle.Primary),
 		new ButtonBuilder().setCustomId(`timetable:settings`).setLabel("設定").setStyle(ButtonStyle.Secondary),
 	),
