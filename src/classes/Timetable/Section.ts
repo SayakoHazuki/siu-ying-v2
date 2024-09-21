@@ -1,5 +1,4 @@
 import type { Moment } from "moment-timezone";
-import { CONFIG } from "../../config.js";
 import { CONSTS } from "../../consts.js";
 import { TimeslotType } from "../../enums/calendar.js";
 
@@ -35,23 +34,18 @@ export class LessonSection extends Section {
         this.classes = data.classes;
 
         /* title format: "Subject1/SubjectB Rm101/Rm102" */
-        let subjectAbbrevs = this.classes.map(cls => cls.subject);
-        let venues = this.classes.map(cls => cls.venue)
+        const subjectAbbrevs = this.classes.map(cls => cls.subject);
+        const venues = this.classes.map(cls => cls.venue)
 
-        if (["S5", "S6"].includes(data.form)) {
-            const electiveDeterminant = CONFIG.TIMETABLE.ELECTIVE_DETERMINANTS[data.form as "S5" | "S6"];
-            for (const electiveClassId in electiveDeterminant) {
-                if (subjectAbbrevs.includes(electiveDeterminant[electiveClassId as keyof typeof electiveDeterminant])) {
-                    subjectAbbrevs = [electiveClassId];
-                    venues = [];
-                    break;
-                }
-            }
+        if (/^\[(?<temp1>[1-3]X)]/.test(subjectAbbrevs[0])) {
+            const electiveGroup = (/^\[(?<temp1>[1-3]X)]/.exec(subjectAbbrevs[0]))?.groups?.temp1 as "1X" | "2X" | "3X";
+
+            this.title = electiveGroup in STRINGS.SUBJECT ? STRINGS.SUBJECT[electiveGroup] : electiveGroup;
+        } else {
+            const distinctSubjects = [...new Set(subjectAbbrevs)];
+            const subject = distinctSubjects.map(subj => subj in STRINGS.SUBJECT ? STRINGS.SUBJECT[subj as keyof typeof STRINGS.SUBJECT] : subj)
+            this.title = `${subject.join("/")} ${venues.join("/")}`;
         }
-
-        const subject = subjectAbbrevs.map(subj => subj in STRINGS.SUBJECT ? STRINGS.SUBJECT[subj as keyof typeof STRINGS.SUBJECT] : subj)
-
-        this.title = `${subject.join("/")} ${venues.join("/")}`;
     }
 }
 

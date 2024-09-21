@@ -16,10 +16,6 @@ export const CONFIG = {
     TIMETABLE: {
         CALENDAR_REL_SAVE_PATH: '../../../data/apiCalendar.json', // relative to classes/Timetable/Calendar.ts
         SCHEDULES_REL_SAVE_PATH: '../../../data/apiSchedules.json', // relative to classes/Timetable/Schedules
-        ELECTIVE_DETERMINANTS: {
-            S5: { "1X": "ICT", "2X": "TH", "3X": "VA" },
-            S6: { "1X": "ICT", "2X": "TH", "3X": "VA" },
-        }
     },
     GENERAL: {
         CLASSES: [
