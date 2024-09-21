@@ -4,14 +4,14 @@ import { LessonSection, LunchSection, MorningAssemblySection, RecessSection } fr
 
 const TimeslotsData = [
     { startTime: "08:10", endTime: "08:40", type: "MorningAssembly" },
-    { startTime: "08:40", endTime: "09:30", type: "Lesson" },
-    { startTime: "09:30", endTime: "10:20", type: "Lesson" },
-    { startTime: "10:20", endTime: "10:35", type: "Recess" },
-    { startTime: "10:35", endTime: "11:30", type: "Lesson" },
-    { startTime: "11:30", endTime: "12:15", type: "Lesson" },
-    { startTime: "12:15", endTime: "13:20", type: "Lunch" },
-    { startTime: "13:20", endTime: "14:10", type: "Lesson" },
-    { startTime: "14:10", endTime: "15:00", type: "Lesson" },
+    { startTime: "08:40", endTime: "09:35", type: "Lesson" },
+    { startTime: "09:35", endTime: "10:30", type: "Lesson" },
+    { startTime: "10:30", endTime: "10:45", type: "Recess" },
+    { startTime: "10:45", endTime: "11:40", type: "Lesson" },
+    { startTime: "11:40", endTime: "12:35", type: "Lesson" },
+    { startTime: "12:35", endTime: "13:45", type: "Lunch" },
+    { startTime: "13:50", endTime: "14:45", type: "Lesson" },
+    { startTime: "14:45", endTime: "15:40", type: "Lesson" },
 ]
 
 function getEnumForTimeslotType(type: string) {
