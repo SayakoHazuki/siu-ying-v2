@@ -1,4 +1,5 @@
 import type { Database } from "../../types/database.types.js";
+import logger from "../Logger/index.js";
 import { UserSettings } from "./UserSettings.js";
 import Db from "./index.js";
 
@@ -10,7 +11,10 @@ export class User {
     public constructor(public readonly data: Database['public']['Tables']['user_data']['Row']) {
         this.id = data.userId;
         this.settings = new UserSettings({
-            cls: data.cls ?? undefined,
+            cls: data.cls ?? null,
+            elective_1x: data.elective_1x ?? null,
+            elective_2x: data.elective_2x ?? null,
+            elective_3x: data.elective_3x ?? null,
         });
     }
 
@@ -29,6 +33,7 @@ export class User {
 
     public static async updateOrCreate(userId: string, data: Partial<Database['public']['Tables']['user_data']['Row']>): Promise<User> {
         try {
+            logger.info(data)
             await User.fetch(userId); // Check if user exists
             await Db.client.from('user_data').update(data).eq('userId', userId);
         } catch {

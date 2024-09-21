@@ -3,6 +3,7 @@ import type { Moment } from "moment-timezone";
 import { CONFIG } from "../../config.js";
 import { DayOfCycle, DayType, OtherDay, TimeslotType } from "../../enums/calendar.js";
 import { SiuYingEmbed } from "../../util/embed.js";
+import type { User } from "../Database/User.js";
 import { Calendar } from "./Calendar.js";
 import { Schedules } from "./Schedules.js";
 import type { Section } from "./Section.js";
@@ -48,7 +49,7 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
         const { data } = this as TimetableQueryResult<"Success">;
         switch (data.type) {
             case DayType.HOLIDAY:
-                return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Green").setTitle(`${this.query.query.date.format("YYYY-MM-DD")} - Holiday`).setDescription("No school today! Enjoy your holiday.");
+                return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Green").setTitle(`${this.query.query.date.format("YYYY-MM-DD")} - Holiday`).setDescription("No school on this day! Enjoy your holiday.");
             case DayType.SCHOOL_DAY: {
                 const divider = "────────────────────";
                 const dividerWithText = (text: string) => {
@@ -87,10 +88,13 @@ export class TimetableQuery {
         date: Moment;
     };
 
-    public constructor(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction, cls: string, date: Moment) {
+    private readonly user: User;
+
+    public constructor(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction, cls: string, date: Moment, user: User) {
         if (!cls || !date) throw new Error("Invalid query parameters");
         this.interaction = interaction;
         this.query = { cls, date };
+        this.user = user;
     }
 
     public async execute() {
@@ -124,7 +128,9 @@ export class TimetableQuery {
                 const subjects = schedule.subject.split(CONFIG.API.FORMATS.TIMETABLE_SUBJECT_SPLITTER);
                 const venues = schedule.venue.split(CONFIG.API.FORMATS.TIMETABLE_SUBJECT_SPLITTER);
                 const classes = subjects.map((subject, idx) => ({ subject, venue: venues[idx] }));
-                return (timeslot as Timeslot<TimeslotType.Lesson>).toSection({ classes, form: `S${this.query.cls.charAt(0)}` });
+                return (timeslot as Timeslot<TimeslotType.Lesson>).toSection({
+                    classes, form: `S${this.query.cls.charAt(0)}`, userElectives: this.user.settings.electives,
+                });
             } else {
                 return (timeslot as Timeslot<Exclude<TimeslotType, TimeslotType.Lesson>>).toSection({});
             }

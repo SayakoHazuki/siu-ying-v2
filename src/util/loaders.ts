@@ -40,17 +40,18 @@ export async function loadStructures<T>(
 
 	// Loop through all the files in the directory
 	for (const file of files) {
-		// If the file is index.js or the file does not end with .js, skip the file
-		if (file === 'index.js' || !file.endsWith('.js')) {
-			continue;
-		}
-
 		// Get the stats of the file
 		const statFile = await stat(new URL(`${dir}/${file}`));
 
 		// If the file is a directory and recursive is true, recursively load the structures in the directory
 		if (statFile.isDirectory() && recursive) {
-			structures.push(...(await loadStructures(`${dir}/${file}`, predicate, recursive)));
+			structures.push(...(await loadStructures(new URL(`${dir}/${file}`), predicate, recursive)));
+			continue;
+		}
+
+		// If the file is index.js or the file does not end with .js, skip the file
+		if (file === 'index.js' || !file.endsWith('.js') || file.endsWith('.subcommand.js')) {
+			console.log(`Skipping ${file}`);
 			continue;
 		}
 

@@ -1,5 +1,6 @@
 import { Events, type Client, type ChatInputCommandInteraction, type ModalSubmitInteraction } from 'discord.js';
 import Db from '../classes/Database/index.js';
+import logger from '../classes/Logger/index.js';
 import type { Command } from '../commands/index.js';
 import type { Event } from '../events/index.js';
 
@@ -10,26 +11,41 @@ export function registerEvents(commands: Map<string, Command>, events: Event[], 
 		async execute(interaction) {
 			if (interaction.isCommand()) {
 				const command = commands.get(interaction.commandName);
+				const subcommandText = (interaction as ChatInputCommandInteraction).options.getSubcommand(false);
+				const subcommand = subcommandText ? command?.subcommands?.get(subcommandText) : null;
+				const optionsData = (subcommand ? interaction.options.data[0].options : interaction.options.data) ?? [];
+				logger.info(`Command '${interaction.commandName}${subcommand ? ` ${subcommand.data.name}` : ''}' executed by ${interaction.user.tag} with args: ${optionsData.map(option => `${option.name}: ${option.value}`).join(', ')}`);
 
 				if (!command) {
+					logger.error(`Command '${interaction.commandName}' not found.`);
 					throw new Error(`Command '${interaction.commandName}' not found.`);
 				}
 
 				const { commandName, user, options } = interaction as ChatInputCommandInteraction;
 				const optionsJson = {} as Record<string, string>;
+				if (subcommandText) optionsJson.subcommand = subcommandText;
 				for (const option of options.data) {
 					optionsJson[option.name] = option.value?.toString() ?? "";
 				}
 
 				await Db.insertCommandRecord(commandName, user.id, optionsJson);
-				await command.execute(interaction);
+
+				if (subcommand) {
+					await subcommand.execute(interaction as ChatInputCommandInteraction);
+				} else {
+					await command.execute(interaction);
+				}
 			}
 
 			if (interaction.isButton()) {
-				const [commandId, customId, ...args] = interaction.customId.split(':');
+				const buttonId = interaction.customId;
+				logger.info(`Button '${buttonId}' executed by ${interaction.user.tag}`);
+
+				const [commandId, customId, ...args] = buttonId.split(':');
 				const command = commands.get(commandId);
 
 				if (!command) {
+					logger.error(`Command '${customId}' not found for button ${buttonId}.`);
 					throw new Error(`Command '${customId}' not found.`);
 				}
 
@@ -39,10 +55,14 @@ export function registerEvents(commands: Map<string, Command>, events: Event[], 
 			}
 
 			if (interaction.isStringSelectMenu()) {
-				const [commandId, customId, ...args] = interaction.customId.split(':');
+				const selectMenuId = interaction.customId;
+				logger.info(`Select menu '${selectMenuId}' executed by ${interaction.user.tag} with options: ${interaction.values.join(', ')}`);
+
+				const [commandId, customId, ...args] = selectMenuId.split(':');
 				const command = commands.get(commandId);
 
 				if (!command) {
+					logger.error(`Command '${customId}' not found for select menu ${selectMenuId}.`);
 					throw new Error(`Command '${customId}' not found.`);
 				}
 
@@ -52,11 +72,15 @@ export function registerEvents(commands: Map<string, Command>, events: Event[], 
 			}
 
 			if (interaction.isModalSubmit()) {
-				const [commandId, customId] = interaction.customId.split(':');
+				const modalId = interaction.customId;
+				logger.info(`Modal '${modalId}' submitted by ${interaction.user.tag}`);
+
+				const [commandId, customId] = modalId.split(':');
 
 				const command = commands.get(commandId);
 
 				if (!command) {
+					logger.error(`Command '${customId}' not found for modal ${modalId}.`);
 					throw new Error(`Command '${customId}' not found.`);
 				}
 

@@ -40,6 +40,10 @@ export type Command = {
 	 * @param args - The arguments of the select menu
 	 */
 	handleSelectMenu?(interaction: StringSelectMenuInteraction, customId: string, ...args: string[]): Promise<void> | void;
+	/**
+	 * Subcommands for the command
+	 */
+	subcommands?: Map<string, Command>;
 };
 
 /**
@@ -48,6 +52,10 @@ export type Command = {
 export const schema = z.object({
 	data: z.record(z.any()),
 	execute: z.function(),
+	subcommands: z.map(z.string(), z.any()).optional(),
+	handleButton: z.function().optional(),
+	handleModal: z.function().optional(),
+	handleSelectMenu: z.function().optional(),
 });
 
 /**

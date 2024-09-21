@@ -3,11 +3,10 @@ import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonSt
 import type { Moment } from "moment-timezone";
 import moment from "moment-timezone";
 import { User } from '../classes/Database/User.js';
-import logger from '../classes/Logger/index.js';
 import { TimetableQuery } from '../classes/Timetable/TimetableQuery.js';
 import { CONFIG } from '../config.js';
 import { SiuYingEmbed } from '../util/embed.js';
-import SettingsCommand from './settings.js';
+import SettingsViewCommand from './settings/view.subcommand.js';
 import type { Command } from './index.js';
 
 export const getTimetableActions = (cls: string, date: Moment) => [
@@ -15,8 +14,8 @@ export const getTimetableActions = (cls: string, date: Moment) => [
 		new ButtonBuilder().setCustomId(`timetable:previous:${cls}:${date.format("YYYY-MM-DD")}`).setEmoji("1013803101129543690").setStyle(ButtonStyle.Primary),
 		new ButtonBuilder().setCustomId(`timetable:void`).setLabel(date.format("DD/MM")).setStyle(ButtonStyle.Primary).setDisabled(true),
 		new ButtonBuilder().setCustomId(`timetable:next:${cls}:${date.format("YYYY-MM-DD")}`).setEmoji("1013802785910833234").setStyle(ButtonStyle.Primary),
-		new ButtonBuilder().setCustomId(`timetable:today:${cls}`).setLabel("跳至今日").setStyle(ButtonStyle.Primary),
-		new ButtonBuilder().setCustomId(`timetable:settings`).setLabel("設定").setStyle(ButtonStyle.Secondary),
+		new ButtonBuilder().setCustomId(`timetable:today:${cls}`).setLabel("今日").setStyle(ButtonStyle.Primary),
+		new ButtonBuilder().setCustomId(`timetable:settings`).setEmoji("⚙️").setStyle(ButtonStyle.Secondary),
 	),
 	new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
 		new StringSelectMenuBuilder().setCustomId(`timetable:class:${date.format("YYYY-MM-DD")}`).setPlaceholder(` 選擇班級 (目前: ${cls})`)
@@ -25,8 +24,9 @@ export const getTimetableActions = (cls: string, date: Moment) => [
 	)
 ]
 
-async function customExecute(interaction: ButtonInteraction | ChatInputCommandInteraction | StringSelectMenuInteraction, cls: string, inputMoment: Moment) {
-	const query = new TimetableQuery(interaction, cls, inputMoment);
+export async function customExecute(interaction: ButtonInteraction | ChatInputCommandInteraction | StringSelectMenuInteraction, cls: string, inputMoment: Moment) {
+	const user = await User.fetch(interaction.user.id);
+	const query = new TimetableQuery(interaction, cls, inputMoment, user);
 	await interaction.deferReply();
 	const result = await query.execute();
 	await interaction.editReply({
@@ -54,14 +54,16 @@ export default {
 			},
 		],
 	},
+
 	async execute(interaction: ChatInputCommandInteraction) {
-		logger.info(`Timetable command executed by ${interaction.user.tag}, class: ${interaction.options.getString('class')}, date: ${interaction.options.getString('date')}`);
-
 		let inputCls = interaction.options.getString('class')?.toUpperCase();
-		let inputDate = interaction.options.getString('date');
+		let inputDate = interaction.options.getString('date') ?? moment.tz("Asia/Hong_Kong").format("YYYY-MM-DD");
 
+		/* Validations and default values */
+
+		// If class is not provided, check if user has set a default class
+		const user = await User.fetch(interaction.user.id);
 		if (!inputCls) {
-			const user = await User.fetch(interaction.user.id);
 			if (user?.settings.cls) {
 				inputCls = user.settings.cls;
 			} else {
@@ -69,21 +71,30 @@ export default {
 			}
 		}
 
-		if (!inputDate) {
-			inputDate = moment.tz("Asia/Hong_Kong").format("YYYY-MM-DD")
-		}
-
+		// Check if class is valid
 		if (inputCls && !CONFIG.GENERAL.CLASSES.includes(inputCls)) {
 			return void await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Invalid Class").setDescription("Please enter a valid class (e.g. 1A, 2B)")] });
 		}
 
+		// Check if date is date-of-week
+		if (["mon", "tue", "wed", "thu", "fri", "sat", "sun"].includes(inputDate.toLowerCase())) {
+			const dayOfWeekMoment = moment.tz("Asia/Hong_Kong").day(inputDate);
+			if (dayOfWeekMoment.isBefore(moment.tz("Asia/Hong_Kong"), "day")) {
+				dayOfWeekMoment.add(1, "week");
+			}
+
+			inputDate = dayOfWeekMoment.format("YYYY-MM-DD");
+		}
+
+		// Check if date is valid
 		if (inputDate && !moment.tz(inputDate, "Asia/Hong_Kong").isValid()) {
 			return void await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Invalid Date").setDescription("Please enter a valid date in formats like: 2024-01-13 / 20240113 (Leave blank for today)")] });
 		}
 
+		/* Execute query */
 		const inputMoment = moment.tz(inputDate, "Asia/Hong_Kong");
 
-		const query = new TimetableQuery(interaction, inputCls, inputMoment);
+		const query = new TimetableQuery(interaction, inputCls, inputMoment, user);
 		await interaction.deferReply();
 		const result = await query.execute();
 		await interaction.editReply({
@@ -93,7 +104,6 @@ export default {
 	},
 
 	async handleButton(interaction: ButtonInteraction, customId: string, ...args: string[]) {
-		logger.info(`Timetable button clicked by ${interaction.user.tag}, customId: ${customId}, args: ${args.join(",")}`);
 		switch (customId) {
 			case "previous":
 			case "next": {
@@ -120,7 +130,7 @@ export default {
 			}
 
 			case "settings": {
-				await SettingsCommand.execute(interaction);
+				await SettingsViewCommand.execute(interaction);
 				return;
 			}
 
@@ -131,7 +141,6 @@ export default {
 	},
 
 	async handleSelectMenu(interaction: StringSelectMenuInteraction, customId: string, ...args: string[]) {
-		logger.info(`Timetable select menu clicked by ${interaction.user.tag}, customId: ${customId}, args: ${args.join(",")}`);
 		switch (customId) {
 			case "class": {
 				const [date] = args;

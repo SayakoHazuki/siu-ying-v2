@@ -29,6 +29,7 @@ export class LessonSection extends Section {
     public constructor(startTime: Moment, endTime: Moment, data: {
         classes: Array<{ subject: string; venue: string; }>,
         form: "S1" | "S2" | "S3" | "S4" | "S5" | "S6";
+        userElectives: { "1X"?: string; "2X"?: string; "3X"?: string; };
     }) {
         super(TimeslotType.Lesson, startTime, endTime);
         this.classes = data.classes;
@@ -40,7 +41,12 @@ export class LessonSection extends Section {
         if (/^\[(?<temp1>[1-3]X)]/.test(subjectAbbrevs[0])) {
             const electiveGroup = (/^\[(?<temp1>[1-3]X)]/.exec(subjectAbbrevs[0]))?.groups?.temp1 as "1X" | "2X" | "3X";
 
-            this.title = electiveGroup in STRINGS.SUBJECT ? STRINGS.SUBJECT[electiveGroup] : electiveGroup;
+            const userElective = data.userElectives[electiveGroup] ? (
+                STRINGS.SUBJECT[data.userElectives[electiveGroup] as keyof typeof STRINGS.SUBJECT] ?? data.userElectives[electiveGroup]
+            ) : null;
+            this.title = electiveGroup in STRINGS.SUBJECT ? STRINGS.SUBJECT[electiveGroup] + (
+                userElective ? ` (${userElective})` : ""
+            ) : electiveGroup;
         } else {
             const distinctSubjects = [...new Set(subjectAbbrevs)];
             const subject = distinctSubjects.map(subj => subj in STRINGS.SUBJECT ? STRINGS.SUBJECT[subj as keyof typeof STRINGS.SUBJECT] : subj)
