@@ -50,7 +50,7 @@ export default {
                         name: "New settings",
                         value: Object.entries(data).map((
                             [_key, value]) =>
-                            `Default class set to ${value ?? "(None)"}`
+                            `Default class set to ${value ? value : "(None)"}`
                         ).join("\n") || "No changes"
                     })
                     .setColor("Blue")

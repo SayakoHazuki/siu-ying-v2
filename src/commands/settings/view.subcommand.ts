@@ -23,7 +23,7 @@ export default {
             .setTitle("用戶設定")
             .setDescription("目前用戶設定：")
             .addFields([
-                { name: "時間表預設班別", value: userSettings.cls ?? "Not set", inline: true },
+                { name: "時間表預設班別", value: userSettings.cls ? userSettings.cls : "Not set", inline: true },
                 {
                     name: "時間表顯示選修科目",
                     value: (electiveKeys.map(

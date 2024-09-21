@@ -107,7 +107,7 @@ export default {
                 ]
 
                 data = {
-                    cls: fields.getTextInputValue("settings:set-class:input").toUpperCase() || undefined,
+                    cls: fields.getTextInputValue("settings:set-class:input").toUpperCase() || null,
                 }
                 break;
             }

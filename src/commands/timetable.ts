@@ -38,7 +38,7 @@ export async function customExecute(interaction: ButtonInteraction | ChatInputCo
 export default {
 	data: {
 		name: 'timetable',
-		description: '...',
+		description: 'Check the school\'s timetable!',
 		options: [
 			{
 				name: 'class',
@@ -48,7 +48,7 @@ export default {
 			},
 			{
 				name: 'date',
-				description: 'Input the date you want to check (e.g. 2024-01-13), leave blank for today',
+				description: 'Input the date you want to check (e.g. wed / 2024-01-13 / 2024-01-13), leave blank for today',
 				type: ApplicationCommandOptionType.String,
 				required: false,
 			},
