@@ -4,6 +4,7 @@ import logger from '../classes/Logger/index.js';
 import type { Command } from '../commands/index.js';
 import type { Event } from '../events/index.js';
 
+// Register all events. This is modified from the code provided by discord.js official guide to include other types of interactions like buttons, select menus, and modals.
 export function registerEvents(commands: Map<string, Command>, events: Event[], client: Client): void {
 	// Create an event to handle command interactions
 	const interactionCreateEvent: Event<Events.InteractionCreate> = {

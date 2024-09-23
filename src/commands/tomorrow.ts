@@ -38,6 +38,7 @@ export default {
 
         const tmrMoment = moment.tz("Asia/Hong_Kong").add(1, 'days');
 
+        // Calls customExecute from timetable.ts, with the moment object set to the next day
         await customExecute(interaction, inputCls, tmrMoment);
     },
 } satisfies Command;

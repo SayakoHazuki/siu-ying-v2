@@ -1,6 +1,8 @@
 import type { Interaction } from "discord.js";
 import { EmbedBuilder } from "discord.js";
 
+// This is a custom embed class that extends the EmbedBuilder class from discord.js
+// All embeds in the bot should be made using this class
 export class SiuYingEmbed extends EmbedBuilder {
     public constructor(data: {
         user: Interaction["user"];

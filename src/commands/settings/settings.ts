@@ -99,6 +99,8 @@ export default {
     async handleModal(interaction, customId, fields) {
         let tests: Array<{ message: string, run(data: Partial<UserSettingsData>): boolean }> = [];
         let data: Partial<UserSettingsData> = {};
+        
+        // For now, there are only two possible customIds: "set-class" and "set-electives"
 
         switch (customId) {
             case "set-class": {
@@ -168,7 +170,7 @@ export default {
                         name: "New settings",
                         value: Object.entries(data).map((
                             [key, value]) =>
-                            `${keyToDisplay.get(key) ?? key} set to ${value ?? "(None)"}`
+                            `${keyToDisplay.get(key) ?? key} set to ${value ?? "(None)"}` // If value is null, display "(None)"
                         ).join("\n") || "No changes"
                     })
                     .setColor("Blue")

@@ -9,6 +9,7 @@ import { Schedules } from "./Schedules.js";
 import type { Section } from "./Section.js";
 import { Timeslot } from "./Timeslots.js";
 
+// Result of a timetable query
 class TimetableQueryResult<status extends "Error" | "Success"> {
     public readonly query: TimetableQuery;
 
@@ -36,20 +37,25 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
         this.data = data;
     }
 
+    // Convert the result to a string
     public toString() {
         return this.success ? JSON.stringify(this.data) : this.data;
     }
 
+    // Convert the result to an embed
     public toEmbed() {
         if (!this.success) {
+            // If the query failed, return a red embed with the error message
             const { data } = this as TimetableQueryResult<"Error">;
             return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Red").setTitle("Timetable Query Failed").setDescription(data);
         }
 
+        // If the query was successful, return an embed with the timetable
         const { data } = this as TimetableQueryResult<"Success">;
         switch (data.type) {
             case DayType.HOLIDAY:
                 return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Green").setTitle(`${this.query.query.date.format("YYYY-MM-DD")} - Holiday`).setDescription("No school on this day! Enjoy your holiday.");
+                
             case DayType.SCHOOL_DAY: {
                 const divider = "────────────────────";
                 const dividerWithText = (text: string) => {
@@ -62,10 +68,10 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
                 }
 
                 const sectionsBlock = data.sections.map(section => {
-                    if (section.timeslotType === TimeslotType.Lesson) return `<t:${section.startTime.unix()}:t> ${section.title}`;
-                    return "-# " + dividerWithText("00:00 " + section.title ?? "").replace("00:00", `<t:${section.startTime.unix()}:t>`);
+                    if (section.timeslotType === TimeslotType.Lesson) return `<t:${section.startTime.unix()}:t> ${section.title}`; // Show the time for lessons
+                    return "-# " + dividerWithText("00:00 " + section.title ?? "").replace("00:00", `<t:${section.startTime.unix()}:t>`); // Show the time for non-lessons, in small font
                 }).join("\n");
-                const dateBlock = `### ${data.sections[0].startTime.format("ddd, DD MMM YYYY")} (Day ${DayOfCycle[data.dayOfCycle]})`;
+                const dateBlock = `### ${data.sections[0].startTime.format("ddd, DD MMM YYYY")} (Day ${DayOfCycle[data.dayOfCycle]})`; // The date, in heading3 font
 
                 return new SiuYingEmbed({ user: this.query.interaction.user })
                     .setColor("Blue")
@@ -75,11 +81,14 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
             }
 
             default:
+                // This should never happen
                 return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Red").setTitle("Timetable Query Failed").setDescription("An unknown error occurred");
         }
     }
 }
 
+// Query to get the timetable for a specific class on a specific date
+// This is a helper class to execute timetable related queries for timetable commands
 export class TimetableQuery {
     public readonly interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction;
 
@@ -90,6 +99,7 @@ export class TimetableQuery {
 
     private readonly user: User | null;
 
+    // Create a new instance of the query with the provided parameters
     public constructor(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction, cls: string, date: Moment, user: User | null) {
         if (!cls || !date) throw new Error("Invalid query parameters");
         this.interaction = interaction;
@@ -97,8 +107,9 @@ export class TimetableQuery {
         this.user = user;
     }
 
+    // Execute the query, including fetching the calendar and schedules, as well as prcessing the user data
     public async execute() {
-        const calendar = await Calendar.fromFile();
+        const calendar = await Calendar.fromFile(); // Prefer cached calendar data over API.
 
         const dayOfCycle = calendar.getDayOfCycle(this.query.date);
         if (dayOfCycle === null) {
@@ -106,9 +117,11 @@ export class TimetableQuery {
         }
 
         if (dayOfCycle === OtherDay.HOLIDAY) {
+            // If the day is a holiday, return a holiday response
             return this.finish(true, { type: DayType.HOLIDAY });
         }
 
+        // The day is a school day, get the schedules for the class
         const schedules = await Schedules.fromFile();
 
         const classSchedule = schedules.getClassSchedule(this.query.cls);
@@ -118,12 +131,17 @@ export class TimetableQuery {
 
         const daySchedules = classSchedule.getDaySchedules(dayOfCycle);
         if (!daySchedules?.length) {
+            // If there are no schedules for the class on this day, return an error response as this should not happen
             return this.finish(false, "No schedule for the class on this day");
         }
 
+        // Get the timeslots for the day
         const dayTimeslots = Timeslot.getAllOfDate(this.query.date);
+        
+        // For each timeslot, convert it to a section
         const sections = dayTimeslots.map((timeslot) => {
             if (timeslot.type === TimeslotType.Lesson) {
+                // If the timeslot is a lesson, get the corresponding schedule and create a lesson section
                 const schedule = daySchedules[timeslot.indexOfType];
                 const subjects = schedule.subject.split(CONFIG.API.FORMATS.TIMETABLE_SUBJECT_SPLITTER);
                 const venues = schedule.venue.split(CONFIG.API.FORMATS.TIMETABLE_SUBJECT_SPLITTER);
@@ -132,13 +150,16 @@ export class TimetableQuery {
                     classes, form: `S${this.query.cls.charAt(0)}`, userElectives: this.user?.settings.electives ?? null,
                 });
             } else {
+                // If the timeslot is not a lesson (e.g. morning assembly, recess, lunch, etc), simply create a section with the timeslot type
                 return (timeslot as Timeslot<Exclude<TimeslotType, TimeslotType.Lesson>>).toSection({});
             }
         });
 
+        // Return the a successful response with the sections and day type
         return this.finish(true, { sections, type: DayType.SCHOOL_DAY, dayOfCycle });
     }
 
+    // Should only be called in execute(), this is a helper function to finish the query with a TimetableQueryResult
     private finish(success: boolean, data: string | {
         dayOfCycle: DayOfCycle;
         sections: Section[];
@@ -146,6 +167,7 @@ export class TimetableQuery {
     } | {
         type: DayType.HOLIDAY;
     }) {
+        // Return an instance of TimetableQueryResult with the query, success status, and data
         return new TimetableQueryResult(this, success, data);
     }
 }

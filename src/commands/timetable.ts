@@ -9,6 +9,7 @@ import { SiuYingEmbed } from '../util/embed.js';
 import SettingsViewCommand from './settings/view.subcommand.js';
 import type { Command } from './index.js';
 
+// Get the timetable actions (buttons and select menus)
 export const getTimetableActions = (cls: string, date: Moment) => [
 	new ActionRowBuilder<ButtonBuilder>().addComponents(
 		new ButtonBuilder().setCustomId(`timetable:previous:${cls}:${date.format("YYYY-MM-DD")}`).setEmoji("1013803101129543690").setStyle(ButtonStyle.Primary),
@@ -24,6 +25,7 @@ export const getTimetableActions = (cls: string, date: Moment) => [
 	)
 ]
 
+// Execute the query with custom parameters, mainly for button actions as they require different parameters e.g. specific class input
 export async function customExecute(interaction: ButtonInteraction | ChatInputCommandInteraction | StringSelectMenuInteraction, cls: string, inputMoment: Moment) {
 	await interaction.deferReply();
 	const user = await User.fetch(interaction.user.id);
@@ -110,9 +112,11 @@ export default {
 			case "next": {
 				const [cls, date] = args;
 				if (!cls || !date) {
+					// If either class or date is not provided, return an error message. As the customIds should all include both class and date, this should not happen.
 					return void await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Invalid Action").setDescription("An unknown error occurred")] });
 				}
 
+				// Add or subtract 1 day from the current date
 				const inputMoment = moment.tz(date, "Asia/Hong_Kong");
 				inputMoment[customId === "previous" ? "subtract" : "add"](1, "day");
 
@@ -123,6 +127,7 @@ export default {
 			case "today": {
 				const [cls] = args;
 				if (!cls) {
+					// If class is not provided, return an error message. As the customIds should all include class, this should not happen.
 					return void await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Invalid Class").setDescription("An unknown error occurred")] });
 				}
 
@@ -131,11 +136,13 @@ export default {
 			}
 
 			case "settings": {
+				// Basically calling the settings view command
 				await SettingsViewCommand.execute(interaction);
 				return;
 			}
 
 			default:
+				// If the customId is not recognized, return an error message. This should not happen.
 				await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Invalid Action").setDescription("An unknown error occurred")] });
 		}
 
@@ -144,6 +151,8 @@ export default {
 	async handleSelectMenu(interaction: StringSelectMenuInteraction, customId: string, ...args: string[]) {
 		switch (customId) {
 			case "class": {
+				// The select menu for class selection under the timetable embed
+				
 				const [date] = args;
 				if (!date) {
 					return void await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Invalid Class").setDescription("An unknown error occurred")] });
@@ -154,6 +163,7 @@ export default {
 			}
 
 			default:
+				// If the customId is not recognized, return an error message. This should not happen.
 				await interaction.reply({ embeds: [new SiuYingEmbed({ user: interaction.user }).setColor("Red").setTitle("Invalid Action").setDescription("An unknown error occurred")] });
 		}
 	}

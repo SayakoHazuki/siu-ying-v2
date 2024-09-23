@@ -4,15 +4,19 @@ import { TimeslotType } from "../../enums/calendar.js";
 
 const { STRINGS } = CONSTS.CALENDAR;
 
+// Represents a section in the timetable of a day
 export class Section {
     public readonly startTime: Moment;
 
+    // Currently not much use, but may be useful in the future
     public readonly endTime: Moment;
 
+    // Will be used to display the section in the timetable
     public title?: string;
 
     public readonly timeslotType: TimeslotType;
 
+    // Should not be used directly, use the subclasses (LessonSection, MorningAssemblySection, RecessSection, LunchSection) instead
     public constructor(timeslotType: TimeslotType, startTime: Moment, endTime: Moment, title?: string) {
         this.startTime = startTime;
         this.endTime = endTime;
@@ -21,6 +25,7 @@ export class Section {
     }
 }
 
+// Represents a lesson section in the timetable
 export class LessonSection extends Section {
     public readonly classes: Array<{
         subject: string; venue: string;
@@ -38,16 +43,21 @@ export class LessonSection extends Section {
         const subjectAbbrevs = this.classes.map(cls => cls.subject);
         const venues = this.classes.map(cls => cls.venue)
 
+        // If the first subject starts with [1X], [2X], or [3X], it is an elective group
         if (/^\[(?<temp1>[1-3]X)]/.test(subjectAbbrevs[0])) {
             const electiveGroup = (/^\[(?<temp1>[1-3]X)]/.exec(subjectAbbrevs[0]))?.groups?.temp1 as "1X" | "2X" | "3X";
 
+            // Get the user's elective for the group, if any
             const userElective = data.userElectives?.[electiveGroup] ? (
                 STRINGS.SUBJECT[data.userElectives[electiveGroup] as keyof typeof STRINGS.SUBJECT] ?? data.userElectives[electiveGroup]
             ) : null;
+            
+            // Set the title to the elective group, with the user's elective in brackets if available
             this.title = electiveGroup in STRINGS.SUBJECT ? STRINGS.SUBJECT[electiveGroup] + (
                 userElective ? ` (${userElective})` : ""
             ) : electiveGroup;
         } else {
+            // Get the distinct subjects and convert the abbreviations to full names
             const distinctSubjects = [...new Set(subjectAbbrevs)];
             const subject = distinctSubjects.map(subj => subj in STRINGS.SUBJECT ? STRINGS.SUBJECT[subj as keyof typeof STRINGS.SUBJECT] : subj)
             this.title = `${subject.join("/")} ${venues.join("/")}`;
@@ -55,18 +65,21 @@ export class LessonSection extends Section {
     }
 }
 
+// Represents a morning assembly section in the timetable
 export class MorningAssemblySection extends Section {
     public constructor(startTime: Moment, endTime: Moment, _data: any) {
         super(TimeslotType.MorningAssembly, startTime, endTime, "早會");
     }
 }
 
+// Represents a recess section in the timetable
 export class RecessSection extends Section {
     public constructor(startTime: Moment, endTime: Moment, _data: any) {
         super(TimeslotType.Recess, startTime, endTime, "小息");
     }
 }
 
+// Represents a lunch section in the timetable
 export class LunchSection extends Section {
     public constructor(startTime: Moment, endTime: Moment, _data: any) {
         super(TimeslotType.Lunch, startTime, endTime, "午膳");

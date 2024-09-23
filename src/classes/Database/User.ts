@@ -3,11 +3,13 @@ import logger from "../Logger/index.js";
 import { UserSettings } from "./UserSettings.js";
 import Db from "./index.js";
 
+// User class to interact with user data
 export class User {
     public readonly id: string;
 
     public readonly settings: UserSettings;
 
+    // Create a new instance of the user
     public constructor(public readonly data: Database['public']['Tables']['user_data']['Row']) {
         this.id = data.userId;
         this.settings = new UserSettings({
@@ -18,6 +20,7 @@ export class User {
         });
     }
 
+    // Fetch user data from the database, returns null if user not found
     public static async fetch(userId: string): Promise<User | null> {
         const { data, error } = await Db.client.from('user_data').select('*').eq('userId', userId).single();
         if (error || !data) {
@@ -29,6 +32,7 @@ export class User {
         return new User(data);
     }
 
+    // Update a user's data or create a new user if not found
     public static async updateOrCreate(userId: string, data: Partial<Database['public']['Tables']['user_data']['Row']>): Promise<User> {
         try {
             logger.info(data)
