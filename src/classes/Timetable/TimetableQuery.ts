@@ -88,9 +88,9 @@ export class TimetableQuery {
         date: Moment;
     };
 
-    private readonly user: User;
+    private readonly user: User | null;
 
-    public constructor(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction, cls: string, date: Moment, user: User) {
+    public constructor(interaction: ButtonInteraction | CommandInteraction | StringSelectMenuInteraction, cls: string, date: Moment, user: User | null) {
         if (!cls || !date) throw new Error("Invalid query parameters");
         this.interaction = interaction;
         this.query = { cls, date };
@@ -101,7 +101,7 @@ export class TimetableQuery {
         const calendar = await Calendar.fromFile();
 
         const dayOfCycle = calendar.getDayOfCycle(this.query.date);
-        if (!dayOfCycle) {
+        if (dayOfCycle === null) {
             return this.finish(false, "Invalid date");
         }
 
@@ -129,7 +129,7 @@ export class TimetableQuery {
                 const venues = schedule.venue.split(CONFIG.API.FORMATS.TIMETABLE_SUBJECT_SPLITTER);
                 const classes = subjects.map((subject, idx) => ({ subject, venue: venues[idx] }));
                 return (timeslot as Timeslot<TimeslotType.Lesson>).toSection({
-                    classes, form: `S${this.query.cls.charAt(0)}`, userElectives: this.user.settings.electives,
+                    classes, form: `S${this.query.cls.charAt(0)}`, userElectives: this.user?.settings.electives ?? null,
                 });
             } else {
                 return (timeslot as Timeslot<Exclude<TimeslotType, TimeslotType.Lesson>>).toSection({});

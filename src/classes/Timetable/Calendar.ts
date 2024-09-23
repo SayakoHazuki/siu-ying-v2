@@ -39,7 +39,10 @@ export class Calendar {
     public getDayOfCycle(moment: Moment) {
         logger.warn(`getting with key ${moment.format(CONFIG.API.FORMATS.CALENDAR_KEY)}`);
         const day = this.data.get(moment.format(CONFIG.API.FORMATS.CALENDAR_KEY));
-        if (!day) return null;
+        if (!day) {
+            logger.warn("day not found");
+            return null
+        }
 
         if (day === consts.OTHER_DAYS.HOLIDAY) {
             return OtherDay.HOLIDAY;

@@ -25,9 +25,10 @@ export const getTimetableActions = (cls: string, date: Moment) => [
 ]
 
 export async function customExecute(interaction: ButtonInteraction | ChatInputCommandInteraction | StringSelectMenuInteraction, cls: string, inputMoment: Moment) {
-	const user = await User.fetch(interaction.user.id);
-	const query = new TimetableQuery(interaction, cls, inputMoment, user);
 	await interaction.deferReply();
+	const user = await User.fetch(interaction.user.id);
+
+	const query = new TimetableQuery(interaction, cls, inputMoment, user);
 	const result = await query.execute();
 	await interaction.editReply({
 		embeds: [result.toEmbed()],

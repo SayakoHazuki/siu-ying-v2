@@ -15,9 +15,9 @@ export default {
         const user = await User.fetch(interaction.user.id);
         const userSettings = {
             cls: user?.settings.cls,
-            electives: user.settings.electives
+            electives: user?.settings.electives
         }
-        const electiveKeys = Object.keys(userSettings.electives) as Array<keyof typeof userSettings.electives>;
+        const electiveKeys = ["1X", "2X", "3X"] as Array<keyof typeof userSettings["electives"]>;
 
         const embed = new SiuYingEmbed({ user: interaction.user })
             .setTitle("用戶設定")
@@ -27,7 +27,7 @@ export default {
                 {
                     name: "時間表顯示選修科目",
                     value: (electiveKeys.map(
-                        key => `${key}: ${userSettings.electives[key] || "Not set"}`
+                        key => `${key}: ${userSettings.electives?.[key] ?? "Not set"}`
                     )).join("\n"),
                     inline: true
                 },

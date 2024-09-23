@@ -126,7 +126,7 @@ export default {
 
                 for (const key of ["1X", "2X", "3X"]) {
                     const elective = fields.getTextInputValue(`settings:set-electives:${key}`)?.toUpperCase() as "1X" | "2X" | "3X";
-                    data[`elective_${key.toLowerCase() as "1x" | "2x" | "3x"}`] = elective ?? null;
+                    data[`elective_${key.toLowerCase() as "1x" | "2x" | "3x"}`] = elective ? elective : null;
                 }
 
                 break;

@@ -18,14 +18,12 @@ export class User {
         });
     }
 
-    public static async fetch(userId: string): Promise<User> {
+    public static async fetch(userId: string): Promise<User | null> {
         const { data, error } = await Db.client.from('user_data').select('*').eq('userId', userId).single();
-        if (error) {
-            throw new Error(`Failed to fetch user data: ${error.message}`);
-        }
-
-        if (!data) {
-            throw new Error(`User with ID ${userId} not found`);
+        if (error || !data) {
+            if (error) logger.error(error);
+            if (!data) logger.warn(`User ${userId} not found`);
+            return null;
         }
 
         return new User(data);
@@ -34,7 +32,9 @@ export class User {
     public static async updateOrCreate(userId: string, data: Partial<Database['public']['Tables']['user_data']['Row']>): Promise<User> {
         try {
             logger.info(data)
-            await User.fetch(userId); // Check if user exists
+            const user = await User.fetch(userId); // Check if user exists
+            if (!user) throw new Error("User not found");
+
             await Db.client.from('user_data').update(data).eq('userId', userId);
         } catch {
             // User most likely doesn't exist
@@ -45,6 +45,6 @@ export class User {
             }
         }
 
-        return User.fetch(userId);
+        return User.fetch(userId) as Promise<User>;
     }
 }
