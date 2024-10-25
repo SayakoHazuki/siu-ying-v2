@@ -55,7 +55,7 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
         switch (data.type) {
             case DayType.HOLIDAY:
                 return new SiuYingEmbed({ user: this.query.interaction.user }).setColor("Green").setTitle(`${this.query.query.date.format("YYYY-MM-DD")} - Holiday`).setDescription("No school on this day! Enjoy your holiday.");
-                
+
             case DayType.SCHOOL_DAY: {
                 const divider = "────────────────────";
                 const dividerWithText = (text: string) => {
@@ -69,7 +69,7 @@ class TimetableQueryResult<status extends "Error" | "Success"> {
 
                 const sectionsBlock = data.sections.map(section => {
                     if (section.timeslotType === TimeslotType.Lesson) return `<t:${section.startTime.unix()}:t> ${section.title}`; // Show the time for lessons
-                    return "-# " + dividerWithText("00:00 " + section.title ?? "").replace("00:00", `<t:${section.startTime.unix()}:t>`); // Show the time for non-lessons, in small font
+                    return "-# " + dividerWithText("00:00 " + (section.title ?? "")).replace("00:00", `<t:${section.startTime.unix()}:t>`); // Show the time for non-lessons, in small font
                 }).join("\n");
                 const dateBlock = `### ${data.sections[0].startTime.format("ddd, DD MMM YYYY")} (Day ${DayOfCycle[data.dayOfCycle]})`; // The date, in heading3 font
 
@@ -137,7 +137,7 @@ export class TimetableQuery {
 
         // Get the timeslots for the day
         const dayTimeslots = Timeslot.getAllOfDate(this.query.date);
-        
+
         // For each timeslot, convert it to a section
         const sections = dayTimeslots.map((timeslot) => {
             if (timeslot.type === TimeslotType.Lesson) {
